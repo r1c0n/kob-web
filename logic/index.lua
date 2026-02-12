@@ -16,4 +16,6 @@ return string.format(
 Today it is: %s
 And here if you have the output of the rock CJSON being used on Kob-Web!:
 %s
-]], hello,  heythere, os.date(), json)
+
+Request-Type: %s
+]], hello,  heythere, os.date(), json, request.method)

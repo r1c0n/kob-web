@@ -1,13 +1,25 @@
-use actix_web::{App, HttpResponse, HttpServer, Responder, get, web::{self}};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, web::{self}};
+use serde::Deserialize;
 use std::{fs};
 use mlua::{Lua, prelude::LuaResult};
+use std::collections::HashMap;
 
-fn dynamic_routing_lua(route: &str) -> HttpResponse {
+fn dynamic_routing_lua(req: HttpRequest, route: &str) -> HttpResponse {
+    let mut requestinfo
+     = HashMap::from([
+      ("method", req.method().to_string()),
+      ("route", req.uri().to_string()),
+      ("clientip", req.peer_addr().expect("No ip").to_string()),
+      //("httpversion", req.version().to_string()),
+    ]);
+    //println!("{:?}", requestinfo);
     // Get LuaRocks paths
     let lua_path = std::env::var("LUA_PATH").unwrap_or_default();
     let lua_cpath = std::env::var("LUA_CPATH").unwrap_or_default();
     
     let lua = unsafe { Lua::unsafe_new() };
+    let mut luareqinfo = lua.create_table_from(requestinfo).expect("Couldn't fetch request info");
+    lua.globals().set("request", luareqinfo);
     lua.load(&format!(
         r#"
         package.path = package.path .. ";{}"
@@ -19,7 +31,10 @@ fn dynamic_routing_lua(route: &str) -> HttpResponse {
     if let Ok(script_content) = fs::read_to_string(format!("logic/{}.lua", &file_name)) {
         let lua_output =  match lua.load(script_content).eval::<_>() {
             Ok(content) => content,
-            Err(_) => String::from("Error executing Lua, please check server logs."),
+            Err(e) =>  {
+                 println!("Lua error: {}", e);
+                 String::from("Error executing Lua, please check server logs.")
+            }
         };
         
         return HttpResponse::Ok().body(lua_output);
@@ -27,18 +42,21 @@ fn dynamic_routing_lua(route: &str) -> HttpResponse {
     } else {
         return HttpResponse::Ok().body("Unexistent route.")
     }
+    
 
 }
 
 #[get("/{route}")]
-async fn dynamic_routing(route: web::Path<String>) -> impl Responder {
-    return dynamic_routing_lua(&route.into_inner());
+async fn dynamic_routing(req: HttpRequest, route: web::Path<String>) -> impl Responder {
+    //println!("{:?}", &req.head());
+    return dynamic_routing_lua(req, &route.into_inner());
 
 }
 
 #[get("/")]
-async fn index() -> impl Responder {
-    return dynamic_routing_lua("index");
+async fn index(req: HttpRequest) -> impl Responder {
+    //println!("{:?}", &req.head());
+    return dynamic_routing_lua(req, "index");
 
 }
 
