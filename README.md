@@ -5,7 +5,7 @@
 ## How does it work?
 So to use Kob-web you first need to have the following structure:
 ```
-(config, views and static are yet to be implemented.)
+(views and static are yet to be implemented.)
 server/
 |-----config
 |         |------server.toml
@@ -32,10 +32,67 @@ return hello .. "my name is" .. name .. "today it is: " .. os.time()
 
 ## TODO List
 - [x] Pass minimal request info onto the Lua VM (Request method: "GET, POST, PUT...", clientip, url).
-- [ ] Pass params and header-type of the request to the Lua VM, and allow Lua VM to modify the response headers.
+- [x] Add config/server.toml functionality. 
+- [x] Pass path parameters and query parameters to the Lua VM
+- [ ] Pass Header-type of the request to the Lua VM, and allow Lua VM to modify the response headers.
+
 - [ ] Add support to a template engine (maybe Jinja2).
 - [ ] Add static folder's functionality.
-- [x] Add config/server.toml functionality. 
+
+## What's new?
+
+<details>
+
+<summary>Path Parameters</summary>
+
+## Path Params:
+
+Kob-Web's way of finding the lua file for the route the client requests has changed to, for example:
+
+If there is a request `/users` kobweb will try to find either
+`users.lua` or `users./index.lua`
+And there is now support for Path Params:
+
+If there is a request `/users/45`  Kob-Web will try to find either `users/45.lua`or `users/45/index.lua`, if there is neither, kob-web will call `users.lua` or `users./index.lua` with path_params "45", take note that kob-web takes priority on files over params, if there is a `45.lua` , it will have priority over `users.lua` or `users/index.lua` with `45`as a path parameter.
+
+If you wish to have a route that accepts params, you need to specify it in server.toml, under the [routing] section with the key "allow_path_params" with the value of the routes you wish, for ex:
+```toml
+[routing]
+allow_path_params = ["/test", "/admin/*]
+# The input aboves allow the endpoint "/test" to take parameters. There also is support for wildcards as seen in "/admin/*", it will give all endpoints under /admin/ to support params, for example: "/admin/warn/1", "/admin/ban/2"
+```
+</details>
+
+<details>
+<summary>Query Parameters</summary>
+
+## Query Params
+
+Kob-Web supports standard query parameters just like any other web framework.
+
+**Example:**
+```
+/users?id=42&name=john&filter=active
+```
+
+Query parameters are automatically parsed and passed to your Lua script as a table called `query_params`:
+```lua
+-- Access individual params
+local user_id = query_params.id        -- "42"
+local user_name = query_params.name    -- "john"
+local filter = query_params.filter     -- "active"
+
+-- Or iterate through all params
+for key, value in pairs(query_params) do
+    print(key .. " = " .. value)
+end
+
+return "User ID: " .. (query_params.id or "none")
+```
+
+Query parameters are available in all routes automatically, no configuration needed!
+
+</details>
 
 ## How to build from source
 ### Linux:

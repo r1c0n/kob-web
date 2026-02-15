@@ -27,8 +27,8 @@ async fn dynamic_routing(path: Option<web::Path<String>>, req: HttpRequest) -> i
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Kob-web --version: v1.2");
-    println!("Added passing minimal request info into the Lua VM, under the table 'request.\n'");
+    println!("Kob-web --version: v1.3");
+    println!("Added path_params and query_params both under tables of the same name, and addded server.toml functionality.\n'");
 
    if let Ok(routes) = fs::read_dir("logic") {
     println!("Available routes:");
