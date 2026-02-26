@@ -10,10 +10,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
 
-    env:
-      TARGET: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +26,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ env.TARGET }}
+          targets: ${{ matrix.target }}
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -29,36 +34,35 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
-          key: ubuntu-${{ env.TARGET }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ubuntu-${{ env.TARGET }}-cargo-
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Install dependencies
+      - name: Install aarch64 cross compiler
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Install Lua
         run: |
-          sudo apt-get update
-          sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config mold
+          sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
 
       - name: Build
+        env:
+          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
+        run: cargo build --release --target ${{ matrix.target }} -j2
+
+      - name: Rename binary
+        shell: bash
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            PROFILE="--release"
-            BUILD_DIR="release"
-          else
-            PROFILE=""
-            BUILD_DIR="debug"
-          fi
-
-          export RUSTFLAGS="-C link-arg=-fuse-ld=mold"
-          cargo build $PROFILE --target $TARGET -j2
-
-          cp target/$TARGET/$BUILD_DIR/kob-web kob-web-$TARGET
+          cp "target/${{ matrix.target }}/release/kob-web" "kob-web-${{ matrix.target }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kob-web-${{ env.TARGET }}
-          path: kob-web-${{ env.TARGET }}
+          name: kob-web-${{ matrix.target }}
+          path: kob-web-${{ matrix.target }}
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -66,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download artifact
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
