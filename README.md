@@ -1,4 +1,5 @@
-# Kob-Web v1.4-beta1
+# Kob-Web (v1.4-beta1)
+
 ## A blazingly fast Rust Webserver built with Actix+mlua, that supports Lua as a backend scripting language with support to LuaRocks.
 > [!WARNING]
 > Kob-Web is W.I.P at the time, several things may be subject to change!
