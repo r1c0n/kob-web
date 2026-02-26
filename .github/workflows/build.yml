@@ -15,8 +15,6 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
 
@@ -41,14 +39,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Install aarch64 cross compiler
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu
-
-      - name: Install Lua (Linux)
+      - name: Install Lua and mold (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config
+          sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config mold
           sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
 
       - name: Install Lua (Windows)
@@ -58,14 +52,26 @@ jobs:
           luaVersion: "5.4"
 
       - name: Build
+        shell: bash
         env:
           PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
-        run: cargo build --release --target ${{ matrix.target }} -j2
+          RUSTFLAGS: ${{ runner.os == 'Linux' && '-C link-arg=-fuse-ld=mold' || '' }}
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            cargo build --release --target ${{ matrix.target }} -j2
+          else
+            cargo build --target ${{ matrix.target }} -j2
+          fi
 
       - name: Rename binary
         shell: bash
         run: |
-          BIN=target/${{ matrix.target }}/release/kob-web
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            BUILD_DIR="release"
+          else
+            BUILD_DIR="debug"
+          fi
+          BIN=target/${{ matrix.target }}/${BUILD_DIR}/kob-web
           EXT=""
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
             EXT=".exe"
