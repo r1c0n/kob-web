@@ -8,6 +8,7 @@
 ## How does it work?
 So to use Kob-web you first need to have the following structure:
 
+```
 server/
 ├── config/
 │   └── server.toml
@@ -17,6 +18,7 @@ server/
 │   └── index.html
 └── static/
     └── icon.png
+```
 
 To start using Kob-Web, create an index.lua, that file will be responsible for the backend login at the endpoint /.
 After that you can script however you want with kob-web! There is an example on how to use it down below:
