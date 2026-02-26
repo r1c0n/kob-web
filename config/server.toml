@@ -1,9 +1,13 @@
 # Hello! Im server.toml! Im responsible for most of the server's configuration!
-[socket]
+[server]
 # Here you can set the ip address and the port the server will be hosted on!
 address="0.0.0.0"
 port=8080
+# Specify the max payload size in MegaBytes
+max_payload_size=25
 
 [routing]
 # Here you'll write which routes will be able to accept path parameters through allow_path_params!
-allow_path_params = ["/", "/test/*"]
+
+# For example, down below we allow path parameters for index
+allow_path_params = ["/", "/demo"]
