@@ -45,6 +45,10 @@ jobs:
           sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config
           sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
 
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install Lua (Windows)
         if: runner.os == 'Windows'
         uses: leafo/gh-actions-lua@v10
