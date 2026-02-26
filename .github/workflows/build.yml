@@ -37,8 +37,10 @@ jobs:
       - name: Install Lua (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y lua5.4 liblua5.4-dev
-          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+          sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
+          cat /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
+          pkg-config --libs --cflags lua54
 
       - name: Install Lua (Windows)
         if: runner.os == 'Windows'
