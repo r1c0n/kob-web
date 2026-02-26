@@ -22,12 +22,13 @@ server/
 
 To start using Kob-Web, create an index.lua, that file will be responsible for the backend login at the endpoint /.
 After that you can script however you want with kob-web! There is an example on how to use it down below:
-lua
+```lua
 hi="Hello"
 name="john"
 
 ---you need to always return something at the end of the script so that the endpoint renders output. 
 return hello .. "my name is" .. name .. "today it is: " .. os.time()
+```
 
 ## What's new?
 <details>
@@ -104,14 +105,14 @@ If there is a request /users kobweb will try to find either
 users.lua or users./index.lua
 And there is now support for Path Params:
 
-If there is a request /users/45  Kob-Web will try to find either users/45.lua`or `users/45/index.lua, if there is neither, kob-web will call users.lua or users./index.lua with path_params "45", take note that kob-web takes priority on files over params, if there is a 45.lua , it will have priority over users.lua or users/index.lua with `45`as a path parameter.
+If there is a request `/users/45`  Kob-Web will try to find either `users/45.lua`or `users/45/index.lua`, if there is neither, kob-web will call `users.lua` or `users./index.lua` with path_params `"45"`, take note that kob-web takes priority on files over params, if there is a `45.lua` , it will have priority over `users.lua` or `users/index.lua` with `45` as a path parameter.
 
 If you wish to have a route that accepts params, you need to specify it in server.toml, under the [routing] section with the key "allow_path_params" with the value of the routes you wish, for ex:
-toml
+```toml
 [routing]
 allow_path_params = ["/test", "/admin/*]
 # The input aboves allow the endpoint "/test" to take parameters. There also is support for wildcards as seen in "/admin/*", it will give all endpoints under /admin/ to support params, for example: "/admin/warn/1", "/admin/ban/2"
-
+```
 </details>
 
 <details>
@@ -122,12 +123,11 @@ allow_path_params = ["/test", "/admin/*]
 Kob-Web supports standard query parameters just like any other web framework.
 
 *Example:*
-
-/users?id=42&name=john&filter=active
+`/users?id=42&name=john&filter=active`
 
 
 Query parameters are automatically parsed and passed to your Lua script as a table called query_params:
-lua
+```lua
 -- Access individual params
 local user_id = query_params.id        -- "42"
 local user_name = query_params.name    -- "john"
@@ -139,7 +139,7 @@ for key, value in pairs(query_params) do
 end
 
 return "User ID: " .. (query_params.id or "none")
-
+```
 
 Query parameters are available in all routes automatically, no configuration needed!
 
@@ -159,37 +159,37 @@ Query parameters are available in all routes automatically, no configuration nee
 ### Linux:
 (Arch linux)
 Install lua:
-bash
+```bash
 pacman -S lua
-
+```
 
 Install cargo
-bash
+```bash
 pacman -S rustup
 rustup install stable
 rustup default stable
-
+```
 
 Clone the repo
-sh
+```bash
 git clone https://github.com/zauceee/kob-web.git
-
+```
 
 Go inside the kob-web folder.
-sh
+```bash
 cd kob-web
-
+```
 
 And run 
-sh
+```bash
 cargo build --release
-
+```
 
 The binary will be inside
-sh
+```bash
 cd ./target/release/
 ./kob-web
-
+```
 
 ### Windows:
 Same stuff :P.
