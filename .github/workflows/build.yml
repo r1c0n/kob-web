@@ -34,16 +34,20 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target/
+            target
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-cargo-
 
+      # ---------------- Linux deps ----------------
+
       - name: Install Lua and mold (Linux)
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get update
           sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config mold
-          sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
+
+      # ---------------- Windows deps ----------------
 
       - name: Install Lua (Windows)
         if: runner.os == 'Windows'
@@ -51,17 +55,25 @@ jobs:
         with:
           luaVersion: "5.4"
 
+      # ---------------- Build ----------------
+
       - name: Build
         shell: bash
-        env:
-          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
-          RUSTFLAGS: ${{ runner.os == 'Linux' && '-C link-arg=-fuse-ld=mold' || '' }}
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            cargo build --release --target ${{ matrix.target }} -j2
+            PROFILE="--release"
           else
-            cargo build --target ${{ matrix.target }} -j2
+            PROFILE=""
           fi
+
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            export RUSTFLAGS="-C link-arg=-fuse-ld=mold"
+            cargo build $PROFILE --target ${{ matrix.target }} -j2
+          else
+            cargo build $PROFILE --target ${{ matrix.target }} -j2
+          fi
+
+      # ---------------- Rename binary ----------------
 
       - name: Rename binary
         shell: bash
@@ -71,18 +83,24 @@ jobs:
           else
             BUILD_DIR="debug"
           fi
-          BIN=target/${{ matrix.target }}/${BUILD_DIR}/kob-web
+
           EXT=""
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
             EXT=".exe"
           fi
-          cp "${BIN}${EXT}" "kob-web-${{ matrix.target }}${EXT}"
+
+          BIN="target/${{ matrix.target }}/${BUILD_DIR}/kob-web${EXT}"
+          cp "$BIN" "kob-web-${{ matrix.target }}${EXT}"
+
+      # ---------------- Upload ----------------
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: kob-web-${{ matrix.target }}
           path: kob-web-${{ matrix.target }}*
+
+  # ================= Release Job =================
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
