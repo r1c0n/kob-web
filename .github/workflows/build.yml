@@ -30,6 +30,17 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
+
       - name: Install aarch64 cross compiler
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: sudo apt-get install -y gcc-aarch64-linux-gnu
@@ -39,8 +50,6 @@ jobs:
         run: |
           sudo apt-get install -y lua5.4 liblua5.4-dev pkg-config
           sudo ln -sf /usr/lib/x86_64-linux-gnu/pkgconfig/lua5.4.pc /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
-          cat /usr/lib/x86_64-linux-gnu/pkgconfig/lua54.pc
-          pkg-config --libs --cflags lua54
 
       - name: Install Lua (Windows)
         if: runner.os == 'Windows'
@@ -49,7 +58,9 @@ jobs:
           luaVersion: "5.4"
 
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
+        run: cargo build --release --target ${{ matrix.target }} -- -j2
 
       - name: Rename binary
         shell: bash
