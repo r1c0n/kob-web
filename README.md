@@ -28,6 +28,15 @@ return hello .. "my name is" .. name .. "today it is: " .. os.time()
 
 ## What's new?
 <details>
+           <summary>Maximum Payload Size.</summary>
+
+           ## Payload Size limit
+           Since you now can parse request body's on kob-web, you may want to receive files sometimes,
+           and to set a maximum payload size, you can do so on the config/server.toml with the following key:
+           max_payload_size=25
+</details>
+
+<details>
 <summary>Request Info Parsing (Improved)</summary>
 
 ## Request Table **(Improved)**
