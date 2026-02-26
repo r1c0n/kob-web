@@ -60,7 +60,7 @@ jobs:
       - name: Build
         env:
           PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
-        run: cargo build --release --target ${{ matrix.target }} -- -j2
+        run: cargo build --release --target ${{ matrix.target }} -j2
 
       - name: Rename binary
         shell: bash
