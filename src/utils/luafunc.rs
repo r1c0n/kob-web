@@ -210,6 +210,12 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
             .unwrap();
         lua.globals().set("path_params", path_params);
     } else if !script_content.1.is_empty() {
+        println!(
+            "{} {} -> {}",
+            req.method().to_string().bold().green(),
+            req.uri().to_string().bold(),
+            "404".red()
+        );
         return HttpResponse::NotFound().body("Unexistent route.");
     }
 
@@ -265,7 +271,8 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
             println!("{} = {}", k, v);
         }
         let resp = formulatedresponse.body(lua_output);
-        println!("{} {} -> {}",
+        println!(
+            "{} {} -> {}",
             req.method().to_string().bold().green(),
             req.uri().to_string().bold(),
             resp.status().as_u16().to_string().yellow()
@@ -273,7 +280,9 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
         return resp;
     //return HttpResponse::Ok().body(lua_output);
     } else {
-        println!("{} {} -> {}",
+        println!("FUCK YOU");
+        println!(
+            "{} {} -> {}",
             req.method().to_string().bold().green(),
             req.uri().to_string().bold(),
             "404".red()
