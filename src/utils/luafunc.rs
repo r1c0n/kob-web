@@ -280,7 +280,6 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
         return resp;
     //return HttpResponse::Ok().body(lua_output);
     } else {
-        println!("FUCK YOU");
         println!(
             "{} {} -> {}",
             req.method().to_string().bold().green(),
