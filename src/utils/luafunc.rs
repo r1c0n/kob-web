@@ -3,6 +3,7 @@ use actix_web::http::StatusCode;
 use actix_web::http::header::{self, Header, HeaderName, HeaderValue};
 use actix_web::web::Bytes;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, body, web};
+use colored::Colorize;
 use core::borrow;
 use mlua::{Lua, ObjectLike};
 use std::collections::HashMap;
@@ -209,6 +210,12 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
             .unwrap();
         lua.globals().set("path_params", path_params);
     } else if !script_content.1.is_empty() {
+        println!(
+            "{} {} -> {}",
+            req.method().to_string().bold().green(),
+            req.uri().to_string().bold(),
+            "404".red()
+        );
         return HttpResponse::NotFound().body("Unexistent route.");
     }
 
@@ -263,9 +270,23 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
             let (k, v) = pair.unwrap();
             println!("{} = {}", k, v);
         }
-        return formulatedresponse.body(lua_output);
+        let resp = formulatedresponse.body(lua_output);
+        println!(
+            "{} {} -> {}",
+            req.method().to_string().bold().green(),
+            req.uri().to_string().bold(),
+            resp.status().as_u16().to_string().yellow()
+        );
+        return resp;
     //return HttpResponse::Ok().body(lua_output);
     } else {
+        println!("FUCK YOU");
+        println!(
+            "{} {} -> {}",
+            req.method().to_string().bold().green(),
+            req.uri().to_string().bold(),
+            "404".red()
+        );
         return HttpResponse::NotFound().body("Unexistent route.");
     }
 }
