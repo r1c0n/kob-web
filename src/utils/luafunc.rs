@@ -275,11 +275,16 @@ pub fn dynamic_routing_lua(req: HttpRequest, route: &str, body: web::Bytes) -> H
             "{} {} -> {}",
             req.method().to_string().bold().green(),
             req.uri().to_string().bold(),
-            resp.status().as_u16().to_string().yellow()
+            if resp.status() == StatusCode::NOT_FOUND {
+                resp.status().as_u16().to_string().red()
+            } else {
+                resp.status().as_u16().to_string().yellow()
+            }
         );
         return resp;
     //return HttpResponse::Ok().body(lua_output);
     } else {
+        println!("FUCK YOU");
         println!(
             "{} {} -> {}",
             req.method().to_string().bold().green(),
